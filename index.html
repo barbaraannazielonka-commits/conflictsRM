@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kitchen Conflicts: Solve It at Work</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tile:#E7EEEC; --tile2:#D6E1DE; --paper:#FFFFFF; --ink:#22303A; --ink2:#51646E; --line:#C3D1CD;
+  --teal:#17676F; --teal-ink:#FFFFFF; --lamp:#F2B134; --lamp-ink:#3A2A00;
+  --ok:#2A7A3B; --okbg:#E2F2E5; --bad:#B7332B; --badbg:#FBE6E3; --bar:#22303A;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --tile:#131C21; --tile2:#1B272D; --paper:#1F2D34; --ink:#E8F0F1; --ink2:#A9BBC1; --line:#38505A;
+    --teal:#52B8C0; --teal-ink:#08191C; --ok:#6CCB7C; --okbg:#1C3A26; --bad:#FF8A80; --badbg:#442020; --bar:#0D1418;
+  }
+}
+:root[data-theme="dark"]{
+  --tile:#131C21; --tile2:#1B272D; --paper:#1F2D34; --ink:#E8F0F1; --ink2:#A9BBC1; --line:#38505A;
+  --teal:#52B8C0; --teal-ink:#08191C; --ok:#6CCB7C; --okbg:#1C3A26; --bad:#FF8A80; --badbg:#442020; --bar:#0D1418;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 70px)}
+[hidden]{display:none!important}
+body{
+  margin:0; color:var(--ink); background-color:var(--tile);
+  background-image:linear-gradient(var(--tile2) 1px,transparent 1px),linear-gradient(90deg,var(--tile2) 1px,transparent 1px);
+  background-size:56px 56px;
+  font:400 18px/1.6 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+h1,h2,h3,h4{font-family:"Barlow Condensed","Arial Narrow",Impact,sans-serif;font-weight:700;margin:0;line-height:1.05}
+button,select,textarea,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--lamp);outline-offset:2px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bar);color:#fff;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 18px}
+.top .brand{font:700 26px/1 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.3px}
+.score{background:var(--lamp);color:var(--lamp-ink);font-weight:700;padding:6px 14px;border-radius:999px;font-size:16px;white-space:nowrap}
+
+/* ticket rail */
+.rail{display:flex;gap:12px;overflow-x:auto;padding:20px 18px 24px;max-width:1120px;margin:0 auto;scroll-snap-type:x proximity}
+.ticket{flex:0 0 118px;scroll-snap-align:center;position:relative;border:0;border-top:7px solid var(--line);
+  background:var(--paper);color:var(--ink);text-align:left;padding:8px 10px 14px;cursor:pointer;
+  filter:drop-shadow(0 2px 1px rgba(10,20,25,.28));transition:transform .15s ease}
+.ticket::after{content:"";position:absolute;left:0;right:0;bottom:-7px;height:8px;
+  background:linear-gradient(135deg,var(--paper) 50%,transparent 50%) 0 0/8px 8px repeat-x,
+             linear-gradient(225deg,var(--paper) 50%,transparent 50%) 0 0/8px 8px repeat-x}
+.ticket .tn{display:block;font:700 28px/1 "Barlow Condensed","Arial Narrow",sans-serif}
+.ticket .tt{display:block;font-weight:700;font-size:15px;line-height:1.2;margin-top:2px}
+.ticket .tm{display:block;font-size:13px;color:var(--ink2)}
+.ticket .td{display:none;font-size:13px;font-weight:700;color:var(--ok)}
+.ticket.done{border-top-color:var(--ok)}
+.ticket.done .td{display:block}
+.ticket[aria-current="step"]{border-top-color:var(--lamp);transform:translateY(-4px)}
+
+/* sheet */
+main{padding:0 14px}
+.sheet{position:relative;max-width:820px;margin:0 auto 56px;background:var(--paper);padding:30px 30px 44px;
+  filter:drop-shadow(0 3px 2px rgba(10,20,25,.3))}
+.sheet::after{content:"";position:absolute;left:0;right:0;bottom:-11px;height:12px;
+  background:linear-gradient(135deg,var(--paper) 50%,transparent 50%) 0 0/12px 12px repeat-x,
+             linear-gradient(225deg,var(--paper) 50%,transparent 50%) 0 0/12px 12px repeat-x}
+.shead h2{font-size:clamp(36px,7vw,56px)}
+.shead .meta{color:var(--ink2);margin:6px 0 0;font-size:16px}
+.task{border-top:2px dashed var(--line);margin-top:30px;padding-top:20px}
+.thead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.thead h3{font-size:30px}
+.pts{background:var(--lamp);color:var(--lamp-ink);font-weight:700;font-size:14px;padding:2px 10px;border-radius:999px}
+.intro{margin:8px 0 0;color:var(--ink2)}
+p{max-width:64ch}
+
+/* hero */
+.hero h2{font-size:clamp(44px,9vw,78px);line-height:.98;max-width:14ch}
+.hero .sub{font-size:22px;margin:14px 0 0;font-weight:700;color:var(--teal)}
+.hero .lead{margin-top:18px}
+.plan{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:4px}
+.plan li{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dotted var(--line);padding:4px 0}
+.plan b{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:22px;margin-right:8px}
+.field{display:grid;gap:6px;margin-top:18px;max-width:340px}
+.field input{padding:10px 12px;border:2px solid var(--line);background:var(--paper);border-radius:6px;min-height:44px}
+
+/* buttons */
+.btn{font-weight:700;font-size:16px;padding:10px 18px;min-height:44px;border:2px solid var(--teal);background:var(--paper);color:var(--teal);border-radius:6px;cursor:pointer}
+.btn.primary{background:var(--teal);color:var(--teal-ink)}
+.btn.small{min-height:36px;padding:4px 12px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.nav{display:flex;justify-content:space-between;gap:12px;margin-top:38px;flex-wrap:wrap}
+.left{margin:34px 0 0;color:var(--ink2);font-size:16px}
+
+/* reading + audio */
+.read{background:var(--tile);border-left:6px solid var(--lamp);padding:14px 20px;margin-top:10px}
+.read h4{font-size:26px;margin-bottom:6px}
+.read p{margin:.7em 0}
+.audio{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0 0}
+.audio select{padding:8px 10px;border:2px solid var(--line);background:var(--paper);border-radius:6px;min-height:44px}
+.noaudio{margin:10px 0 0;color:var(--ink2);font-size:16px}
+.gl{font:inherit;color:inherit;background:none;border:0;border-bottom:2px dotted var(--teal);padding:0;cursor:help}
+.help{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  width:min(580px,calc(100% - 24px));background:var(--bar);color:#fff;padding:14px 16px;border-radius:8px;z-index:30;
+  display:flex;gap:14px;align-items:flex-start;justify-content:space-between;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.help p{margin:0 0 2px;max-width:none}
+.help .w{font:700 24px/1.1 "Barlow Condensed","Arial Narrow",sans-serif}
+.help button{background:none;border:2px solid #fff;color:#fff;border-radius:6px;padding:4px 12px;cursor:pointer;min-height:40px}
+
+/* questions */
+.q{margin:20px 0}
+.qtext{font-weight:700;margin:0 0 8px}
+.opts{display:grid;gap:8px;max-width:640px}
+.opt{text-align:left;padding:10px 14px;min-height:46px;border:2px solid var(--line);background:var(--paper);color:var(--ink);border-radius:6px;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--teal)}
+.opt:disabled{cursor:default;color:var(--ink);opacity:1}
+.opt.ok{border-color:var(--ok);background:var(--okbg)}
+.opt.bad{border-color:var(--bad);background:var(--badbg)}
+.opt.mid{border-color:var(--lamp);background:rgba(242,177,52,.2)}
+.fb{margin:10px 0 0;padding:8px 12px;border-left:5px solid var(--line);background:var(--tile);font-size:16px;max-width:640px}
+.fb.ok{border-color:var(--ok);background:var(--okbg)}
+.fb.bad{border-color:var(--bad);background:var(--badbg)}
+.fb.mid{border-color:var(--lamp);background:rgba(242,177,52,.2)}
+
+/* flashcards */
+.card{display:grid;gap:8px;align-content:center;justify-items:center;width:100%;min-height:230px;margin-top:14px;padding:20px;
+  background:var(--tile);border:2px solid var(--line);border-top:9px solid var(--lamp);text-align:center;cursor:pointer;color:var(--ink)}
+.card .cw{font:700 56px/1 "Barlow Condensed","Arial Narrow",sans-serif}
+.card .cw.s{font-size:38px}
+.card .ch{color:var(--ink2);font-size:16px}
+.card .cd{font-weight:700}
+.card .cn{color:var(--teal);font-weight:700}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.count{color:var(--ink2);font-size:16px}
+
+/* match */
+.match{display:grid;grid-template-columns:1fr 1.4fr;gap:10px 16px;margin-top:14px;align-items:start}
+.col{display:grid;gap:8px}
+.mi{text-align:left;padding:10px 12px;min-height:46px;border:2px solid var(--line);background:var(--paper);color:var(--ink);border-radius:6px;cursor:pointer;font-size:16px}
+.mi.sel{border-color:var(--lamp);background:rgba(242,177,52,.25)}
+.mi.ok{border-color:var(--ok);background:var(--okbg);cursor:default}
+.mi.bad{border-color:var(--bad);background:var(--badbg)}
+
+/* gap fill + order */
+.bank{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.chip{background:var(--tile);border:2px solid var(--line);padding:2px 12px;border-radius:999px;font-weight:700;font-size:16px}
+.gaprow{margin:12px 0;line-height:2.3}
+.gaprow select{padding:6px 8px;border:2px solid var(--line);background:var(--paper);border-radius:6px;min-height:40px;margin:0 6px}
+.mk{font-weight:700;font-size:15px}
+.mk.ok{color:var(--ok)} .mk.bad{color:var(--bad)}
+.ordl{padding-left:26px;margin:14px 0;display:grid;gap:8px;max-width:680px}
+.ordl li{padding:8px 10px;border:2px solid var(--line);border-radius:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ordl li .ot{flex:1 1 220px}
+.ordl li.ok{border-color:var(--ok);background:var(--okbg)}
+.ordl li.bad{border-color:var(--bad);background:var(--badbg)}
+
+/* sort + phrases */
+.phr{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:6px;max-width:560px}
+.phr li{background:var(--tile);padding:6px 12px;border-left:5px solid var(--teal)}
+.dia{margin:12px 0}
+.dia p{margin:.5em 0}
+
+/* writing */
+textarea.write{width:100%;min-height:170px;padding:12px;border:2px solid var(--line);background:var(--paper);border-radius:6px;margin-top:10px;line-height:1.5}
+.crit{list-style:none;padding:0;margin:12px 0;display:grid;gap:4px}
+.crit li{font-size:16px}
+.crit .y{color:var(--ok);font-weight:700}
+.crit .n{color:var(--bad);font-weight:700}
+
+/* result */
+.big{font:700 clamp(70px,16vw,120px)/1 "Barlow Condensed","Arial Narrow",sans-serif}
+.rank{font:700 34px/1.1 "Barlow Condensed","Arial Narrow",sans-serif;color:var(--teal)}
+.barwrap{background:var(--tile);height:16px;border-radius:8px;overflow:hidden;min-width:90px}
+.barwrap i{display:block;height:100%;background:var(--ok)}
+table{border-collapse:collapse;width:100%;margin-top:14px;font-size:16px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+th{font-weight:700}
+.tk{margin:10px 0 0;padding-left:22px}
+.sum{width:100%;min-height:150px;padding:10px;border:2px solid var(--line);background:var(--paper);border-radius:6px;font-size:15px}
+.again{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+footer{text-align:center;color:var(--ink2);font-size:15px;padding:0 16px 28px}
+
+@media (max-width:620px){
+  body{font-size:17px}
+  .sheet{padding:20px 16px 36px}
+  .match{grid-template-columns:1fr}
+  .top .brand{font-size:22px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+@media print{
+  .top,.rail,.nav,.audio,.again,.help,footer{display:none!important}
+  body{background:#fff;color:#000}
+  .sheet{filter:none;box-shadow:none}
+  .sheet::after{display:none}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">Kitchen Conflicts</div>
+  <div class="score" id="score" aria-live="polite">Points 0 / 0</div>
+</header>
+<nav class="rail" id="rail" aria-label="Stations"></nav>
+<main id="main"></main>
+<footer>Nannestad High School, Barbara Anna Zielonka</footer>
+<div class="help" id="help" role="status" hidden>
+  <div><p class="w" id="hw"></p><p id="hd"></p><p id="hn"></p></div>
+  <button type="button" id="hx">Close</button>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- helpers ---------- */
+function h(tag,props){
+  var e=document.createElement(tag);
+  if(props){for(var k in props){var v=props[k];
+    if(k==='class')e.className=v;
+    else if(k==='html')e.innerHTML=v;
+    else if(k.indexOf('on')===0)e.addEventListener(k.slice(2),v);
+    else if(v!==false&&v!=null)e.setAttribute(k,v===true?'':v);}}
+  var kids=Array.prototype.slice.call(arguments,2);
+  (function add(list){list.forEach(function(c){
+    if(c==null||c===false)return;
+    if(Array.isArray(c))return add(c);
+    e.appendChild(c.nodeType?c:document.createTextNode(String(c)));});})(kids);
+  return e;
+}
+function btn(label,fn,cls){return h('button',{type:'button',class:'btn '+(cls||''),onclick:fn},label);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmt(s){return esc(s).replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,function(m,t,k){return '<button type="button" class="gl" data-k="'+(k||t)+'">'+t+'</button>';});}
+function plain(s){return s.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,'$1');}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+/* ---------- glossary ---------- */
+var GL={
+  conflict:['a serious disagreement between people','konflikt'],
+  disagree:['to have a different opinion','å være uenig'],
+  misunderstanding:['when people do not understand each other correctly','misforståelse'],
+  stress:['a feeling of too much pressure','stress, press'],
+  blame:['to say that someone did something wrong','å gi skylden'],
+  respect:['to treat people politely and value them','respekt'],
+  calm:['quiet and relaxed, not angry','rolig'],
+  compromise:['a deal where both people give up a little','kompromiss'],
+  apologise:['to say sorry','å be om unnskyldning'],
+  shift:['your working time, for example 4 pm to 11 pm','vakt, skift'],
+  complain:['to say that you are not happy about something','å klage'],
+  feedback:['comments about how well someone works','tilbakemelding'],
+  order:['a request for food or drinks from a guest','bestilling'],
+  pass:['the place where finished plates wait for the waiters','utleveringsbenken'],
+  colleague:['a person you work with','kollega'],
+  patience:['the ability to wait without getting angry','tålmodighet'],
+  values:['ideas about what is important and right','verdier'],
+  role:['the job or task a person has in a team','rolle'],
+  interrupt:['to start speaking when someone else is speaking','å avbryte'],
+  unfair:['not right or equal for everyone','urettferdig'],
+  trainee:['a person who is learning a job','lærling, praktikant'],
+  grill:['the hot station where meat and fish are cooked','grill'],
+  steak:['a thick piece of meat for cooking','biff'],
+  avoid:['to stay away from something or someone','å unngå'],
+  suggest:['to give an idea for someone to think about','å foreslå']
+};
+var VOCAB=['conflict','disagree','misunderstanding','stress','blame','respect','calm','compromise','apologise','shift','complain','feedback'];
+var EX={
+  conflict:'A conflict started between the cook and the waiter.',
+  disagree:'I disagree with you, but I want to listen.',
+  misunderstanding:'It was a misunderstanding. I read the ticket wrong.',
+  stress:'Friday night gives me a lot of stress.',
+  blame:'Please do not blame me for the late order.',
+  respect:'We show respect when we listen.',
+  calm:'Stay calm and speak slowly.',
+  compromise:'We made a compromise and shared the work.',
+  apologise:'I apologise for my loud voice.',
+  shift:'My shift starts at four.',
+  complain:'The guest wanted to complain to the manager.',
+  feedback:'Can I get feedback on my work?'
+};
+
+/* ---------- audio ---------- */
+var TTS={ok:('speechSynthesis' in window)&&('SpeechSynthesisUtterance' in window),voices:[],token:0,reset:null};
+function loadVoices(){if(!TTS.ok)return;try{TTS.voices=speechSynthesis.getVoices().filter(function(v){return /^en/i.test(v.lang);});}catch(e){}}
+if(TTS.ok){loadVoices();try{speechSynthesis.addEventListener('voiceschanged',loadVoices);}catch(e){}}
+function voiceFor(i){
+  var vs=TTS.voices;if(!vs.length)return null;
+  var gb=vs.filter(function(v){return /^en[-_]GB/i.test(v.lang);});
+  var pool=gb.length>1?gb:vs;
+  return pool[i%pool.length]||pool[0];
+}
+function sentences(t){return (t.match(/[^.!?]+[.!?]+["')\u201D]*|[^.!?]+$/g)||[t]).map(function(s){return s.trim();}).filter(Boolean);}
+function stopSpeech(){
+  TTS.token++;
+  if(TTS.ok){try{speechSynthesis.cancel();}catch(e){}}
+  if(TTS.reset){var r=TTS.reset;TTS.reset=null;r();}
+}
+function speak(lines,rate,onEnd){
+  if(!TTS.ok)return false;
+  try{speechSynthesis.cancel();}catch(e){}
+  var tok=++TTS.token,segs=[];
+  var dia=lines.some(function(l){return l.who===1;});
+  lines.forEach(function(l){sentences(l.text).forEach(function(s){segs.push({s:s,w:l.who||0});});});
+  segs.forEach(function(g,i){
+    var u=new SpeechSynthesisUtterance(g.s);
+    u.lang='en-GB';
+    var v=voiceFor(g.w);if(v){u.voice=v;u.lang=v.lang;}
+    u.rate=rate;
+    u.pitch=g.w===1?0.8:(dia?1.15:1);
+    if(i===segs.length-1){
+      u.onend=function(){if(tok===TTS.token)onEnd();};
+      u.onerror=function(){if(tok===TTS.token)onEnd();};
+    }
+    try{speechSynthesis.speak(u);}catch(e){}
+  });
+  return true;
+}
+function makeAudio(getLines){
+  var wrap=h('div',{class:'audio'});
+  if(!TTS.ok){wrap.appendChild(h('p',{class:'noaudio'},'Audio does not work in this browser. Please read the text.'));return wrap;}
+  var state='idle';
+  var play=btn('Listen',null,'primary');
+  var stop=btn('Stop',null);
+  var sp=h('select',{'aria-label':'Audio speed'},h('option',{value:'0.8'},'Slow'),h('option',{value:'0.95',selected:true},'Normal'));
+  function reset(){state='idle';play.textContent='Listen';stop.disabled=true;}
+  reset();
+  play.onclick=function(){
+    if(state==='idle'){
+      stopSpeech();
+      TTS.reset=reset;state='playing';play.textContent='Pause';stop.disabled=false;
+      speak(getLines(),parseFloat(sp.value),function(){TTS.reset=null;reset();});
+    }else if(state==='playing'){
+      try{speechSynthesis.pause();}catch(e){}
+      state='paused';play.textContent='Resume';
+    }else{
+      try{speechSynthesis.resume();}catch(e){}
+      state='playing';play.textContent='Pause';
+    }
+  };
+  stop.onclick=function(){stopSpeech();};
+  wrap.appendChild(play);wrap.appendChild(stop);
+  wrap.appendChild(h('label',null,'Speed '));
+  wrap.lastChild.appendChild(sp);
+  return wrap;
+}
+
+/* ---------- scoring ---------- */
+var S={},stations=[],curSt=0,tickets=[],leftEls=[],sections=[],scoreEl=document.getElementById('score');
+function reg(key,max){S[key]={st:curSt,max:max,got:0,done:false};updateScore();}
+function award(key,got){var it=S[key];if(!it||it.done)return;it.got=got;it.done=true;updateScore();}
+function best(key,got){var it=S[key];it.got=Math.max(it.got,got);it.done=true;updateScore();}
+function updateScore(){
+  var got=0,max=0,per=stations.map(function(){return {got:0,max:0,left:0};});
+  for(var k in S){var it=S[k];got+=it.got;max+=it.max;var p=per[it.st];if(!p)continue;p.got+=it.got;p.max+=it.max;if(!it.done)p.left++;}
+  scoreEl.textContent='Points '+got+' / '+max;
+  per.forEach(function(p,i){
+    if(tickets[i])tickets[i].classList.toggle('done',p.max>0&&p.left===0);
+    if(leftEls[i]){
+      leftEls[i].textContent=p.max?(p.left?(p.left+(p.left===1?' answer is':' answers are')+' still open on this station.'):'You finished this station.'):'';
+    }
+  });
+  return {got:got,max:max,per:per};
+}
+
+/* ---------- builders ---------- */
+var TN=0;
+function station(name,min,fn){stations.push({name:name,min:min,fn:fn});}
+function task(sec,title,pts,intro){
+  var t=h('div',{class:'task'},
+    h('div',{class:'thead'},h('h3',null,'Task '+(++TN)+'. '+title),pts?h('span',{class:'pts'},pts+(pts===1?' point':' points')):null),
+    intro?h('p',{class:'intro',html:fmt(intro)}):null);
+  sec.appendChild(t);return t;
+}
+function reading(parent,paras,title){
+  parent.appendChild(makeAudio(function(){return paras.map(function(p){return {text:plain(p)};});}));
+  var box=h('div',{class:'read'});
+  if(title)box.appendChild(h('h4',null,title));
+  paras.forEach(function(p){box.appendChild(h('p',{html:fmt(p)}));});
+  parent.appendChild(box);
+}
+function mcq(parent,id,items,o){
+  o=o||{};
+  items.forEach(function(it,n){
+    var key=id+'_'+n;reg(key,1);
+    var opts=it.o.map(function(t,j){return {t:t,ok:j===it.a};});
+    if(!o.fixed)opts=shuffle(opts);
+    var correct=it.o[it.a];
+    var box=h('div',{class:'q'});
+    box.appendChild(h('p',{class:'qtext',html:fmt((n+1)+'. '+it.q)}));
+    var grp=h('div',{class:'opts',role:'group'});
+    var fb=h('div',{class:'fb',hidden:true,role:'status'});
+    var bs=[];
+    opts.forEach(function(op){
+      var b=h('button',{type:'button',class:'opt',html:fmt(op.t)});
+      bs.push({b:b,op:op});
+      b.onclick=function(){
+        if(S[key].done)return;
+        bs.forEach(function(x){x.b.disabled=true;if(x.op.ok)x.b.classList.add('ok');});
+        if(!op.ok)b.classList.add('bad');
+        fb.hidden=false;fb.className='fb '+(op.ok?'ok':'bad');
+        fb.textContent=(op.ok?'Correct. ':'Not quite. The correct answer is: '+plain(correct)+'. ')+(it.w||'');
+        award(key,op.ok?1:0);
+      };
+      grp.appendChild(b);
+    });
+    box.appendChild(grp);box.appendChild(fb);parent.appendChild(box);
+  });
+}
+function match(parent,id,pairs){
+  var keys=pairs.map(function(p,i){var k=id+'_'+i;reg(k,1);return k;});
+  var tries=pairs.map(function(){return 0;});
+  var sel=null,matched=0;
+  var info=h('p',{class:'fb',role:'status'},'Matched 0 of '+pairs.length+'.');
+  var L=h('div',{class:'col'}),R=h('div',{class:'col'});
+  var lb=pairs.map(function(p,i){
+    var b=h('button',{type:'button',class:'mi'},p[0]);
+    b.onclick=function(){
+      if(b.classList.contains('ok'))return;
+      lb.forEach(function(x){x.classList.remove('sel');});
+      sel=i;b.classList.add('sel');
+    };
+    L.appendChild(b);return b;
+  });
+  var order=shuffle(pairs.map(function(p,i){return i;}));
+  var rb=order.map(function(i){
+    var b=h('button',{type:'button',class:'mi'},pairs[i][1]);
+    b.onclick=function(){
+      if(b.classList.contains('ok'))return;
+      if(sel===null){info.textContent='First tap a word on the left. Then tap its meaning.';return;}
+      if(i===sel){
+        b.classList.add('ok');lb[sel].classList.remove('sel');lb[sel].classList.add('ok');
+        award(keys[sel],tries[sel]===0?1:0);matched++;sel=null;
+        info.textContent='Matched '+matched+' of '+pairs.length+'.';
+      }else{
+        tries[sel]++;b.classList.add('bad');
+        setTimeout(function(){b.classList.remove('bad');},700);
+        info.textContent='That is not the right meaning. Try again. Matched '+matched+' of '+pairs.length+'.';
+      }
+    };
+    R.appendChild(b);return b;
+  });
+  parent.appendChild(h('div',{class:'match'},L,R));
+  parent.appendChild(info);
+}
+function gapfill(parent,id,bank,items){
+  parent.appendChild(h('div',{class:'bank'},bank.map(function(w){return h('span',{class:'chip'},w);})));
+  var rows=items.map(function(it,n){
+    var key=id+'_'+n;reg(key,1);
+    var parts=it.t.split('{}');
+    var sel=h('select',{'aria-label':'Gap '+(n+1)},h('option',{value:''},'Choose'),bank.map(function(w){return h('option',{value:w},w);}));
+    var mark=h('span',{class:'mk'});
+    parent.appendChild(h('div',{class:'gaprow'},(n+1)+'. '+parts[0],sel,parts[1],mark));
+    return {key:key,sel:sel,mark:mark,a:it.a};
+  });
+  var msg=h('p',{class:'fb',hidden:true,role:'status'});
+  var chk=btn('Check',function(){
+    if(rows.some(function(r){return !r.sel.value;})){msg.hidden=false;msg.className='fb bad';msg.textContent='Choose a word in every gap first.';return;}
+    var c=0;
+    rows.forEach(function(r){
+      var ok=r.sel.value===r.a;if(ok)c++;
+      r.sel.disabled=true;r.mark.textContent=ok?'Correct':'Answer: '+r.a;r.mark.className='mk '+(ok?'ok':'bad');
+      award(r.key,ok?1:0);
+    });
+    chk.disabled=true;msg.hidden=false;msg.className='fb '+(c===rows.length?'ok':'mid');
+    msg.textContent='You have '+c+' of '+rows.length+' correct.';
+  },'primary');
+  parent.appendChild(chk);parent.appendChild(msg);
+}
+function order(parent,id,steps){
+  reg(id,steps.length);
+  var arr=steps.map(function(t,i){return {t:t,i:i};});
+  var tries=0;do{arr=shuffle(arr);tries++;}while(tries<20&&arr.every(function(x,p){return x.i===p;}));
+  var ul=h('ol',{class:'ordl'});
+  var locked=false;
+  function draw(focusPos,focusBtn){
+    ul.textContent='';
+    arr.forEach(function(x,p){
+      var li=h('li',null,h('span',{class:'ot'},x.t));
+      if(!locked){
+        li.appendChild(btn('Up',function(){if(p>0){var t=arr[p-1];arr[p-1]=arr[p];arr[p]=t;draw(p-1,0);}},'small'));
+        li.appendChild(btn('Down',function(){if(p<arr.length-1){var t=arr[p+1];arr[p+1]=arr[p];arr[p]=t;draw(p+1,1);}},'small'));
+      }else{
+        var ok=x.i===p;li.classList.add(ok?'ok':'bad');
+        li.appendChild(h('span',{class:'mk '+(ok?'ok':'bad')},ok?'Correct place':'Wrong place'));
+      }
+      ul.appendChild(li);
+    });
+    if(focusPos!=null){var bs=ul.children[focusPos].querySelectorAll('button');if(bs[focusBtn])bs[focusBtn].focus();}
+  }
+  draw();
+  var fb=h('div',{class:'fb',hidden:true,role:'status'});
+  var chk=btn('Check the order',function(){
+    locked=true;draw();
+    var c=arr.filter(function(x,p){return x.i===p;}).length;
+    award(id,c);chk.disabled=true;
+    fb.hidden=false;fb.className='fb '+(c===steps.length?'ok':'mid');
+    fb.innerHTML='';fb.appendChild(document.createTextNode('You put '+c+' of '+steps.length+' steps in the right place. The correct order is:'));
+    var o=h('ol',{class:'tk'});steps.forEach(function(s){o.appendChild(h('li',null,s));});fb.appendChild(o);
+  },'primary');
+  parent.appendChild(ul);parent.appendChild(chk);parent.appendChild(fb);
+}
+function scenarios(parent,id,list){
+  list.forEach(function(sc,n){
+    var key=id+'_'+n;reg(key,2);
+    var box=h('div',{class:'q'});
+    box.appendChild(h('p',{class:'qtext',html:fmt((n+1)+'. '+sc.s)}));
+    box.appendChild(makeAudio(function(){return [{text:plain(sc.s)}];}));
+    var grp=h('div',{class:'opts',role:'group'});grp.style.marginTop='10px';
+    var fb=h('div',{class:'fb',hidden:true,role:'status'});
+    var opts=shuffle(sc.o);
+    var bestOpt=sc.o.filter(function(o){return o.p===2;})[0];
+    var bs=[];
+    opts.forEach(function(op){
+      var b=h('button',{type:'button',class:'opt'},op.t);
+      bs.push({b:b,op:op});
+      b.onclick=function(){
+        if(S[key].done)return;
+        stopSpeech();
+        bs.forEach(function(x){x.b.disabled=true;});
+        b.classList.add(op.p===2?'ok':(op.p===1?'mid':'bad'));
+        var head=op.p===2?'Best choice. 2 points. ':(op.p===1?'Possible. 1 point. ':'Not a good choice. 0 points. ');
+        fb.hidden=false;fb.className='fb '+(op.p===2?'ok':(op.p===1?'mid':'bad'));
+        fb.textContent=head+op.f+(op.p<2?' The best choice was: '+bestOpt.t:'');
+        award(key,op.p);
+      };
+      grp.appendChild(b);
+    });
+    box.appendChild(grp);box.appendChild(fb);parent.appendChild(box);
+  });
+}
+function dialogue(parent,lines){
+  parent.appendChild(makeAudio(function(){return lines.map(function(l){return {text:l.t,who:l.w};});}));
+  var box=h('div',{class:'read dia',hidden:true});
+  lines.forEach(function(l){box.appendChild(h('p',null,h('strong',null,l.n+': '),l.t));});
+  var tg=btn('Show the text',function(){box.hidden=!box.hidden;tg.textContent=box.hidden?'Show the text':'Hide the text';},'small');
+  tg.style.marginTop='10px';
+  if(!TTS.ok){box.hidden=false;tg.hidden=true;}
+  parent.appendChild(tg);parent.appendChild(box);
+}
+function flashcards(parent){
+  var i=0,flip=false;
+  var card=h('button',{type:'button',class:'card','aria-live':'polite'});
+  var count=h('span',{class:'count'});
+  function draw(){
+    var k=VOCAB[i],g=GL[k];card.textContent='';
+    if(!flip){card.appendChild(h('span',{class:'cw'},k));card.appendChild(h('span',{class:'ch'},'Tap the card to turn it'));}
+    else{
+      card.appendChild(h('span',{class:'cw s'},k));
+      card.appendChild(h('span',{class:'cd'},g[0]));
+      card.appendChild(h('span',{class:'ce'},'Example: '+EX[k]));
+      card.appendChild(h('span',{class:'cn'},'Norsk: '+g[1]));
+    }
+    count.textContent='Word '+(i+1)+' of '+VOCAB.length;
+  }
+  card.onclick=function(){flip=!flip;draw();};
+  var row=h('div',{class:'row'},
+    btn('Back',function(){i=(i+VOCAB.length-1)%VOCAB.length;flip=false;draw();}),
+    btn('Next word',function(){i=(i+1)%VOCAB.length;flip=false;draw();},'primary'));
+  if(TTS.ok)row.appendChild(btn('Listen',function(){var k=VOCAB[i];stopSpeech();speak([{text:k+'.'},{text:GL[k][0]+'.'},{text:EX[k]}],0.9,function(){});}));
+  row.appendChild(count);
+  draw();parent.appendChild(card);parent.appendChild(row);
+}
+var STATE={name:'',writing:''};
+function writing(parent,id){
+  reg(id,7);
+  var ta=h('textarea',{class:'write','aria-label':'Your message to Pia',placeholder:'Hi Pia, ...'});
+  var wc=h('p',{class:'count'},'0 words');
+  ta.addEventListener('input',function(){STATE.writing=ta.value;wc.textContent=(ta.value.trim()?ta.value.trim().split(/\s+/).length:0)+' words';});
+  var crit=[
+    ['You start with a greeting (Hi Pia, Hello Pia)',function(s){return /\b(hi|hello|hey|dear|good (morning|afternoon|evening))\b/i.test(s);}],
+    ['Your message has at least 40 words',function(s){return s.trim().split(/\s+/).filter(Boolean).length>=40;}],
+    ['You use an I statement (I feel, I need, I think)',function(s){return /\bI (feel|felt|get|need|think|would like|want|find)\b/i.test(s);}],
+    ['You ask politely (Could we, Can you, please)',function(s){return /\b(could|can|would) (we|you|I)\b|\bplease\b/i.test(s);}],
+    ['You suggest a solution (How about, Maybe, Let us)',function(s){return /\b(maybe|how about|what about|let's|let us|we can|we could|I suggest|one idea|what if|a solution)\b/i.test(s);}],
+    ['You finish politely (Thanks, Thank you, Kind regards)',function(s){return /\b(thanks|thank you|best wishes|kind regards|regards|see you)\b/i.test(s);}],
+    ['You do not use "you always" or "you never"',function(s){return !/\byou (always|never)\b/i.test(s);}]
+  ];
+  var out=h('div',{role:'status'});
+  var chk=btn('Check my message',function(){
+    var s=ta.value;
+    if(s.trim().length<5){out.textContent='Write your message first.';return;}
+    var c=0,ul=h('ul',{class:'crit'});
+    crit.forEach(function(x){var ok=x[1](s);if(ok)c++;ul.appendChild(h('li',null,h('span',{class:ok?'y':'n'},ok?'Yes  ':'Not yet  '),x[0]));});
+    best(id,c);
+    out.textContent='';
+    out.appendChild(h('p',{class:'qtext'},'Your check: '+c+' of 7. Your best score counts.'));
+    out.appendChild(ul);
+    out.appendChild(h('p',{class:'intro'},'The computer only looks for certain words and phrases. Your teacher can read your message and give you feedback too. You can change your text and check again.'));
+  },'primary');
+  parent.appendChild(ta);parent.appendChild(wc);parent.appendChild(h('div',{class:'row'},chk));parent.appendChild(out);
+}
+
+/* ---------- content ---------- */
+station('Welcome',3,function(sec){
+  var total=0;stations.forEach(function(s){total+=s.min;});
+  var hero=h('div',{class:'hero'},
+    h('h2',null,'Table 6 is waiting. The cook is stressed. The waiter is angry.'),
+    h('p',{class:'sub'},'What happens next is up to you.'),
+    h('p',{class:'lead'},'Conflicts happen in every workplace. In a kitchen, a bakery or a food factory they can start fast, because the work is busy, loud and hot. In this lesson you will learn what a conflict is, why conflicts start and how you can solve them. You will read, listen, choose, order and write.'),
+    h('p',null,'The lesson takes about 90 minutes. Work at your own speed. Tap underlined words to see what they mean in English and in Norwegian.'));
+  sec.appendChild(hero);
+  var t=h('div',{class:'task'},h('div',{class:'thead'},h('h3',null,'Your shift plan')));
+  var ul=h('ul',{class:'plan'});
+  stations.forEach(function(s,i){}); // filled after all stations are registered
+  t.appendChild(ul);sec.appendChild(t);
+  sec._plan=ul;
+  var how=h('div',{class:'task'},h('div',{class:'thead'},h('h3',null,'How points work')),
+    h('ul',{class:'tk'},
+      h('li',null,'Most questions give 1 point when your first answer is correct.'),
+      h('li',null,'You see feedback after each answer, so you can learn from mistakes.'),
+      h('li',null,'Press Listen on a text to hear it. You can choose slow or normal speed.'),
+      h('li',null,'Your points are shown at the top. Your final score is on the last station.')));
+  sec.appendChild(how);
+  var nameIn=h('input',{type:'text',id:'nm',maxlength:'30',autocomplete:'off'});
+  nameIn.addEventListener('input',function(){STATE.name=nameIn.value.trim();});
+  sec.appendChild(h('div',{class:'field'},h('label',{for:'nm'},'Your first name (shown on your result)'),nameIn));
+  sec.appendChild(h('div',{class:'nav'},h('span'),btn('Start your shift',function(){show(1);},'primary')));
+});
+
+station('Words',13,function(sec){
+  var t=task(sec,'Learn the words',0,'Tap the card to turn it. You see the meaning, an example and the Norwegian word. No points in this task.');
+  flashcards(t);
+  t=task(sec,'Match the words',6,'Tap a word on the left. Then tap its meaning on the right.');
+  match(t,'w_match',[
+    ['conflict','a serious disagreement between people'],
+    ['misunderstanding','when people do not understand each other correctly'],
+    ['blame','to say that someone did something wrong'],
+    ['compromise','a deal where both people give up a little'],
+    ['apologise','to say sorry'],
+    ['respect','to treat people politely and value them']
+  ]);
+  t=task(sec,'Fill the gaps',6,'Choose the correct word for each gap. Then press Check.');
+  gapfill(t,'w_gap',['calm','complain','disagree','feedback','shift','stress'],[
+    {t:'My {} starts at 4 pm and ends at 11 pm.',a:'shift'},
+    {t:'If you are angry, take a breath and stay {}.',a:'calm'},
+    {t:'I {} with you. I think we should use the other recipe.',a:'disagree'},
+    {t:'Guests sometimes {} when the food is cold.',a:'complain'},
+    {t:'The chef gave me {} on my knife skills. It helped me a lot.',a:'feedback'},
+    {t:'Too much {} can make people angry very quickly.',a:'stress'}
+  ]);
+});
+
+station('Friday night',11,function(sec){
+  var t=task(sec,'Read and listen',0,'Read the story or press Listen. Tap underlined words for help.');
+  reading(t,[
+    'It is Friday evening at a restaurant in Oslo. The restaurant is full. Maja works on the [[grill]]. Ali is a waiter. At 7.30 pm Ali brings a new [[order]] to the kitchen. Table 6 wants two [[steak|steak]]s, one well done and one medium. Maja is already very busy. Six other orders are waiting.',
+    'Fifteen minutes later, the guests at Table 6 are angry. They ask Ali where their food is. Ali goes back to the kitchen and says, “You are too slow! The guests are waiting!” Maja answers loudly, “I am doing my best! You always want everything now!” Other cooks stop and look at them.',
+    'Then the steaks come out. Ali looks at the plates and says, “Both steaks are medium. One must be well done!” Maja says, “You wrote medium on the ticket.” Ali says, “No, I did not.” Both are [[stressed|stress]] and angry. Nobody listens.',
+    'The head chef, Tomas, sees the problem. He says, “Stop. Both of you, take a breath.” He takes them to the back room for two minutes. There, Ali says he was afraid of the angry guests. Maja says she feels that nobody [[respects|respect]] her work. Tomas shows them the ticket. The writing is small and hard to read. It looks like “medium” twice, but Ali meant “well done” for one steak. They see that the [[misunderstanding]] was about the ticket. Ali says sorry. Maja says sorry too. They agree to read every ticket together at the [[pass]] before cooking starts. The guests get two fresh steaks and a free dessert.'
+  ],'A busy Friday night');
+  t=task(sec,'True or false?',6,'Choose True or False.');
+  mcq(t,'s_tf',[
+    {q:'Maja works on the grill.',o:['True','False'],a:0,w:'Maja works on the grill.'},
+    {q:'Table 6 wants two steaks.',o:['True','False'],a:0,w:'Table 6 wants two steaks.'},
+    {q:'At first, Maja and Ali speak in a calm way.',o:['True','False'],a:1,w:'Ali says Maja is too slow, and Maja answers loudly.'},
+    {q:'The head chef starts to shout too.',o:['True','False'],a:1,w:'Tomas tells them to stop and take a breath.'},
+    {q:'The writing on the ticket was easy to read.',o:['True','False'],a:1,w:'The writing was small and hard to read.'},
+    {q:'Maja and Ali agree to read every ticket together before cooking.',o:['True','False'],a:0,w:'This is their solution.'}
+  ],{fixed:true});
+  t=task(sec,'Choose the best answer',4);
+  mcq(t,'s_mc',[
+    {q:'What was the real cause of the conflict?',o:['A ticket that was hard to read','Maja is a bad cook','Ali does not like Maja','The guests were rude'],a:0,w:'The ticket caused the misunderstanding.'},
+    {q:'What did Tomas do first?',o:['He told them to stop and take a breath','He sent Ali home','He gave the guests a free dessert','He cooked the steaks himself'],a:0,w:'He helped them to cool down first.'},
+    {q:'How did Ali feel in the back room?',o:['Afraid of the angry guests','Proud of his work','Tired of his job','Angry at the head chef'],a:0,w:'Ali was afraid of the angry guests.'},
+    {q:'Why did Maja feel hurt?',o:['She felt that nobody respected her work','She lost her job','She wanted to be a waiter','She was ill'],a:0,w:'Maja wanted more respect.'}
+  ]);
+});
+
+station('Causes',6,function(sec){
+  var t=task(sec,'Read and listen',0,'There are many reasons for conflicts. Here are four common ones.');
+  reading(t,[
+    'Communication problems: People do not listen, or they do not say clearly what they mean. A small [[misunderstanding]] can become a big problem.',
+    'Stress and time pressure: When it is very busy, people are tired and have little [[patience]]. Small things feel big.',
+    'Roles and tasks: People do not know who must do what, or they think the work is not shared in a fair way.',
+    'Different values and personalities: People have different ideas about what is polite, clean or fast. Different cultures and languages can also play a part.'
+  ],'Four common causes');
+  t=task(sec,'Find the cause',8,'Read each situation. Choose the main cause.');
+  var C=['Communication problem','Stress and time pressure','Roles and tasks','Different values or personalities'];
+  mcq(t,'c_sort',[
+    {q:'Nobody told Lena that the menu changed today.',o:C,a:0,w:'Information did not reach Lena.'},
+    {q:'It is 8 pm, there are 40 guests, and everybody is shouting.',o:C,a:1,w:'The pressure is high, so people lose patience.'},
+    {q:'The dishwasher thinks the cooks should clean their own pans. The cooks think it is his job.',o:C,a:2,w:'Nobody agreed who does this task.'},
+    {q:'Karim likes to joke at work. Sara prefers a quiet kitchen.',o:C,a:3,w:'They have different personalities and ideas about work.'},
+    {q:'The chef said “soon” and the waiter heard “now”.',o:C,a:0,w:'The words were not clear.'},
+    {q:'Two cooks both think they are in charge of the sauces.',o:C,a:2,w:'The roles are not clear.'},
+    {q:'We have no extra staff and the delivery is late again.',o:C,a:1,w:'Too much work and too little time.'},
+    {q:'In Tom’s home country it is rude to say no directly. Here the boss wants a clear yes or no.',o:C,a:3,w:'They have different ideas about what is polite.'}
+  ],{fixed:true});
+});
+
+station('Reactions',8,function(sec){
+  var t=task(sec,'Read and listen',0,'People react to conflict in different ways. Here are five common ways.');
+  reading(t,[
+    'Avoid: You say nothing and stay away from the other person. The problem stays.',
+    'Fight: You want to win. You speak loudly and say that the other person is wrong.',
+    'Give in: You say yes to everything so the conflict ends. Afterwards you feel unhappy.',
+    'Compromise: Both people give a little. Each person gets a part of what they want.',
+    'Solve it together: Both people listen and look for a solution that works for everyone. This takes more time, and it often gives the best result.'
+  ],'Five reactions');
+  t=task(sec,'Which reaction is it?',5,'Choose the reaction in each example.');
+  var R=['Avoid','Fight','Give in','Compromise','Solve it together'];
+  mcq(t,'r_match',[
+    {q:'Eva sees that her colleague took her knife. She says nothing and uses another one.',o:R,a:0,w:'She stays away from the problem.'},
+    {q:'Jonas shouts, “It is your fault! I am right!”',o:R,a:1,w:'He wants to win.'},
+    {q:'Mia hates the new shift plan, but she says, “Fine, whatever you want.”',o:R,a:2,w:'She says yes but feels unhappy.'},
+    {q:'Two cooks need the oven. One uses it until 6 pm, the other after 6 pm.',o:R,a:3,w:'Both give a little.'},
+    {q:'A waiter and a cook sit down for five minutes and plan a better way to pass on orders.',o:R,a:4,w:'They listen and make a plan that works for both.'}
+  ],{fixed:true});
+  t=task(sec,'Think about it',2);
+  mcq(t,'r_think',[
+    {q:'Which reaction is usually best when the problem is important and you have some time?',o:['Avoid','Fight','Give in','Solve it together'],a:3,w:'Both people are heard and the solution lasts longer.'},
+    {q:'Why can it be a problem if you give in every time?',o:['You feel unhappy and the real problem stays','The other person always gets angry','You win every conflict','It takes too long'],a:0,w:'Nothing changes, and you may feel angry later.'}
+  ]);
+});
+
+station('CALM',5,function(sec){
+  var t=task(sec,'Read and listen',0,'Here is a simple plan for conflicts. The word is CALM.');
+  reading(t,[
+    'C is for Cool down. Stop. Take a breath. If you are very angry, wait a few minutes before you speak.',
+    'A is for Ask and listen. Ask what the other person thinks. Listen without [[interrupt|interrupting]].',
+    'L is for Look for solutions. Think of two or three ideas together.',
+    'M is for Make a deal. Choose one idea. Say clearly what each person will do. Check later if it works.'
+  ],'The CALM plan');
+  t=task(sec,'Put the steps in order',4,'Use the Up and Down buttons. Then press Check the order.');
+  order(t,'k_order',[
+    'Take a breath and wait before you speak.',
+    'Ask what the other person thinks and listen.',
+    'Think of two or three ideas together.',
+    'Agree on one plan and check it later.'
+  ]);
+  t=task(sec,'Use CALM',2,'Think about the story from Friday night.');
+  mcq(t,'k_use',[
+    {q:'Which CALM step did Tomas help with first?',o:['Cool down','Look for solutions','Make a deal','Ask and listen'],a:0,w:'He told them to stop and take a breath.'},
+    {q:'“They agree to read every ticket together before cooking.” Which step is this?',o:['Cool down','Ask and listen','Look for solutions','Make a deal'],a:3,w:'They choose one plan and decide what to do.'}
+  ]);
+});
+
+station('Phrases',8,function(sec){
+  var t=task(sec,'Useful phrases',0,'Read the phrases or press Listen. You can use them at work.');
+  var P=['I feel stressed when the orders are late.','Could we check the ticket together?','What do you think?','I understand that you are busy.','Let us find a solution.','I am sorry for my loud voice.'];
+  t.appendChild(makeAudio(function(){return P.map(function(x){return {text:x};});}));
+  t.appendChild(h('ul',{class:'phr'},P.map(function(x){return h('li',null,x);})));
+  t=task(sec,'Choose the better sentence',6,'Which sentence is more polite and helpful?');
+  mcq(t,'p_better',[
+    {q:'Your colleague did not hear your message.',o:['You never listen!','I feel that my message was not clear. Can we check again?'],a:1,w:'This sentence is about you and asks for a solution.'},
+    {q:'You are not sure who must do a task.',o:['That is not my job.','I think this task is unclear. Who should do it?'],a:1,w:'The question helps to solve the problem.'},
+    {q:'You need help with the sauce.',o:['Could you help me with the sauce, please?','Help me now!'],a:0,w:'This is polite.'},
+    {q:'Your colleague is very busy and you need to talk.',o:['You are always busy!','I understand that you are busy. Can we talk after the shift?'],a:1,w:'You show understanding and suggest a time.'},
+    {q:'You made a mistake with an order.',o:['Sorry, I made a mistake. I will check next time.','It was not me. It was someone else.'],a:0,w:'Saying sorry and making a plan builds respect.'},
+    {q:'Your colleague is shouting.',o:['Calm down!','Let us take a short break and talk in two minutes.'],a:1,w:'“Calm down!” often makes people more angry.'}
+  ]);
+  t=task(sec,'Choose the I statement',4,'An I statement says how you feel or what you need. It does not blame the other person.');
+  mcq(t,'p_i',[
+    {q:'Instead of “You are always late!”',o:['You never think about the team.','I feel stressed when you arrive after the shift starts.','Why are you so lazy?'],a:1,w:'It says how you feel and gives a clear reason.'},
+    {q:'Instead of “You never clean the station!”',o:['I need the station to be clean before I start.','You are a messy person.','Everybody knows you do not clean.'],a:0,w:'It says what you need.'},
+    {q:'Instead of “You made a mistake again!”',o:['You cannot do anything right.','I think there is a mistake on this order. Can we check it?','Who is responsible for this?'],a:1,w:'It names the problem and asks for help to solve it.'},
+    {q:'Instead of “You do not listen to me!”',o:['You are rude.','I feel that my idea is not heard. Can I explain it again?','Why do you never listen?'],a:1,w:'It says how you feel and asks politely.'}
+  ]);
+});
+
+station('Listening',9,function(sec){
+  var t=task(sec,'Dialogue 1: The cold soup',4,'First listen without the text. Press Listen. You can listen more than once. Then answer the questions. Use Show the text if you need help.');
+  dialogue(t,[
+    {n:'Daniel',w:0,t:'Sofie, Table 4 says the soup is cold.'},
+    {n:'Sofie',w:1,t:'It was hot when it left the pass. You waited too long to take it.'},
+    {n:'Daniel',w:0,t:'I was carrying four plates. I could not go faster.'},
+    {n:'Sofie',w:1,t:'Okay, I understand. Next time I will call you when the soup is ready, and you take it first.'},
+    {n:'Daniel',w:0,t:'That works for me. Thank you. I will tell Table 4 that we will bring a new soup.'},
+    {n:'Sofie',w:1,t:'I will make it now. Sorry for my tone.'},
+    {n:'Daniel',w:0,t:'No problem. It is a busy night.'}
+  ]);
+  mcq(t,'l_one',[
+    {q:'What is the problem?',o:['The soup is cold','The soup is too salty','The soup is late','There is no soup'],a:0,w:'Table 4 says the soup is cold.'},
+    {q:'Why was Daniel slow?',o:['He was carrying four plates','He was talking to a guest','He did not hear Sofie','He was on a break'],a:0,w:'He says he was carrying four plates.'},
+    {q:'What will Sofie do next time?',o:['Call Daniel when the soup is ready','Serve the soup herself','Make the soup hotter','Ask the manager'],a:0,w:'She will call him when the soup is ready.'},
+    {q:'How does the talk end?',o:['Both stay calm and agree on a plan','Daniel leaves angry','Sofie shouts','They ask the chef to decide'],a:0,w:'Both use calm words and make a deal.'}
+  ]);
+  t=task(sec,'Dialogue 2: The late bus',4,'Listen without the text first. Then answer.');
+  dialogue(t,[
+    {n:'Ingrid',w:0,t:'Omar, can I talk to you for a minute? You were late three times this week.'},
+    {n:'Omar',w:1,t:'Yes, I know. I am sorry. My bus changed its time, and I did not tell anyone.'},
+    {n:'Ingrid',w:0,t:'Thank you for telling me. When does the bus arrive now?'},
+    {n:'Omar',w:1,t:'At ten past four. The shift starts at four.'},
+    {n:'Ingrid',w:0,t:'I see. We could start your shift at 4.15 for now. Then you can do the cleaning at the end.'},
+    {n:'Omar',w:1,t:'That is a good idea. I can stay fifteen minutes longer.'},
+    {n:'Ingrid',w:0,t:'Good. Let us try it for two weeks and see if it works.'}
+  ]);
+  mcq(t,'l_two',[
+    {q:'Why was Omar late?',o:['His bus time changed','He was ill','He forgot his keys','He had another job'],a:0,w:'His bus changed its time.'},
+    {q:'What does Ingrid suggest?',o:['Omar starts at 4.15 and cleans at the end','Omar stops working there','Omar takes the car','Omar works only on weekends'],a:0,w:'The shift starts at 4.15 and Omar does the cleaning at the end.'},
+    {q:'How long will they try the new plan?',o:['Two weeks','Two days','Two months','One week'],a:0,w:'They will try it for two weeks.'},
+    {q:'Which reaction does Omar show?',o:['Solve it together','Avoid','Fight','Give in'],a:0,w:'He explains, listens and agrees on a plan.'}
+  ]);
+});
+
+station('Scenarios',10,function(sec){
+  var t=task(sec,'What would you do?',10,'Read each situation. Choose the best action. The best choice gives 2 points. A possible choice gives 1 point.');
+  scenarios(t,'sc',[
+    {s:'You work in a bakery. Your colleague Jonas often leaves the dough table dirty at the end of his shift. You must clean it before you start. Today you are tired and angry.',o:[
+      {t:'Say nothing and clean the table again.',p:0,f:'You avoid the problem. It will come back and you will feel more angry.'},
+      {t:'Say loudly in front of everyone: “You are lazy!”',p:0,f:'This is an attack. Jonas will feel ashamed and may fight back.'},
+      {t:'Talk to Jonas in private: “I feel frustrated when I clean before I start. Can we agree who cleans what?”',p:2,f:'You use an I statement, you stay private and polite, and you ask for a solution.'},
+      {t:'Tell the manager and do not speak to Jonas.',p:1,f:'Sometimes you need a manager, but it is usually better to talk to the person first.'}]},
+    {s:'You work at a fish processing plant. A new colleague, Ahmed, is still learning English and Norwegian. Some colleagues laugh when he makes a mistake. You see it.',o:[
+      {t:'Laugh with the others so they do not laugh at you.',p:0,f:'This hurts Ahmed and shows no respect.'},
+      {t:'Say calmly to the group: “Let us help him. We all had to learn once.”',p:2,f:'You are calm and clear, you show respect and you offer help.'},
+      {t:'After work, ask Ahmed if he is okay and offer to help him.',p:1,f:'This is kind and Ahmed gets support, but the group behaviour does not change.'},
+      {t:'Shout at them: “You are stupid!”',p:0,f:'Shouting starts a new conflict. Stay calm.'}]},
+    {s:'In a restaurant kitchen, the chef says in front of the team, “This plate looks terrible!” You worked hard on it. You feel ashamed and angry.',o:[
+      {t:'Answer loudly: “Then do it yourself!”',p:0,f:'This starts a fight in front of the team.'},
+      {t:'Say “Yes, chef” and fix the plate fast. Talk to the chef later if it happens again.',p:1,f:'This is a fair choice during a busy service. Talk later if it keeps happening.'},
+      {t:'After service, ask: “Can I get feedback in private? I want to learn how you like the plating.”',p:2,f:'You wait until you are calm, ask for feedback and show that you want to learn.'},
+      {t:'Tell your colleagues that the chef is unfair.',p:0,f:'Gossip makes the team atmosphere worse and does not solve the problem.'}]},
+    {s:'A colleague asks you to work her Saturday shift. You have plans with your family. You feel pressure to say yes.',o:[
+      {t:'Say yes, but feel unhappy and angry.',p:0,f:'Giving in feels easy now, but you will feel angry later.'},
+      {t:'Say: “I cannot work this Saturday. I can swap with you next week. Does that work?”',p:2,f:'You say no politely and suggest a compromise.'},
+      {t:'Say “No!” and walk away.',p:0,f:'You are clear, but you are not polite. This can start a conflict.'},
+      {t:'Ask the manager to decide.',p:1,f:'This can work, but talking to your colleague first is faster and kinder.'}]},
+    {s:'You are a waiter. A guest shouts that the pasta is cold. Your colleague in the kitchen says it was hot when it left the pass.',o:[
+      {t:'Tell the guest: “The kitchen says it was hot.”',p:0,f:'The guest feels that you do not believe them. The conflict gets bigger.'},
+      {t:'Stay calm and say: “I am sorry. I will take it back and ask for a new one right away.”',p:2,f:'You listen, you apologise and you offer a solution.'},
+      {t:'Ask your manager to talk to the guest.',p:1,f:'This is fine if the guest stays angry, but first try to calm the guest yourself.'},
+      {t:'Walk away and ignore the guest.',p:0,f:'Ignoring the guest makes it worse.'}]}
+  ]);
+});
+
+station('Write',8,function(sec){
+  var t=task(sec,'Write a message to a colleague',7,'Situation: Your colleague Pia often arrives ten minutes late to the evening shift. You must prepare her station before the guests come. You are tired of this. Write a short message to Pia, about 50 to 80 words. Solve the problem with CALM.');
+  t.appendChild(h('ul',{class:'phr'},
+    h('li',null,'I feel ... when ...'),
+    h('li',null,'Could we ... ? / Can you ... , please?'),
+    h('li',null,'How about ... ? / Maybe we can ...'),
+    h('li',null,'Thanks for listening. See you tonight.')));
+  writing(t,'wr');
+});
+
+station('Final check',4,function(sec){
+  var t=task(sec,'Final check',6,'Six quick questions about the whole lesson.');
+  mcq(t,'f',[
+    {q:'What is the first step of CALM?',o:['Cool down','Ask and listen','Make a deal','Look for solutions'],a:0,w:'First stay calm, then talk.'},
+    {q:'“I feel stressed when the orders are late.” What is this?',o:['An I statement','An order','A compromise','A blame'],a:0,w:'It says how you feel without blaming.'},
+    {q:'Both people give a little. What is this?',o:['A compromise','A fight','An apology','A shift'],a:0,w:'Each person gets a part of what they want.'},
+    {q:'Which word means “to say sorry”?',o:['Apologise','Complain','Disagree','Interrupt'],a:0,w:'Apologise means to say sorry.'},
+    {q:'Why is it good to ask questions in a conflict?',o:['To understand the other person’s point of view','To win the argument','To make the other person angry','To end the talk fast'],a:0,w:'Questions help you to understand and find a solution.'},
+    {q:'Your colleague is very angry and shouting. What can you do first?',o:['Stay calm and suggest a short break','Shout back','Walk away and say nothing','Tell everyone in the kitchen'],a:0,w:'Cooling down comes first.'}
+  ]);
+});
+
+station('Result',3,function(sec){
+  sec._result=true;
+});
+
+/* ---------- result ---------- */
+function renderResult(sec){
+  sec.textContent='';
+  var sc=updateScore();
+  var pct=sc.max?Math.round(sc.got/sc.max*100):0;
+  var rank,msg;
+  if(pct>=90){rank='Head Chef';msg='Excellent work. You know the words, the causes and the steps. Use them at work.';}
+  else if(pct>=75){rank='Sous Chef';msg='Very good. You understand conflicts well. Look at the stations below that gave you fewer points.';}
+  else if(pct>=55){rank='Line Cook';msg='Good work. You know the basics. Go back to the weaker stations, read the texts again and listen to the audio.';}
+  else{rank='Kitchen Trainee';msg='You have made a start. Read the texts again, listen to the audio and try the tasks one more time.';}
+  var open=sc.per.reduce(function(a,p){return a+p.left;},0);
+  var nm=STATE.name?STATE.name+', your':'Your';
+  sec.appendChild(h('div',{class:'shead'},h('h2',null,'Your result'),h('p',{class:'meta'},nm+' final score for Kitchen Conflicts')));
+  sec.appendChild(h('div',{class:'task'},
+    h('div',{class:'big'},sc.got+' / '+sc.max),
+    h('p',{class:'rank'},rank+', '+pct+' percent'),
+    h('p',null,msg),
+    open?h('p',{class:'fb mid'},'You still have '+open+' open answers. Go back to the stations with a missing Done label to get more points.'):null));
+  var tb=h('table',null,h('thead',null,h('tr',null,h('th',null,'Station'),h('th',null,'Points'),h('th',null,''))));
+  var tbody=h('tbody');var weak=[];
+  stations.forEach(function(s,i){
+    var p=sc.per[i];if(!p.max)return;
+    var pc=Math.round(p.got/p.max*100);
+    if(p.left===0&&pc<60)weak.push(i);
+    tbody.appendChild(h('tr',null,h('td',null,s.name),h('td',null,p.got+' / '+p.max),h('td',null,h('div',{class:'barwrap'},h('i',{style:'width:'+pc+'%'})))));
+  });
+  tb.appendChild(tbody);sec.lastChild.appendChild(tb);
+  if(weak.length){
+    var w=h('div',{class:'again'});
+    w.appendChild(h('span',null,'Practise again: '));
+    weak.forEach(function(i){w.appendChild(btn(stations[i].name,function(){show(i);},'small'));});
+    sec.lastChild.appendChild(w);
+  }
+  var t=h('div',{class:'task'},h('div',{class:'thead'},h('h3',null,'Three things to remember')),
+    h('ol',{class:'tk'},
+      h('li',null,'Cool down first. Do not speak when you are very angry.'),
+      h('li',null,'Use I statements: I feel ... when ... Can we ... ?'),
+      h('li',null,'Listen, then look for a solution that works for both people.')));
+  sec.appendChild(t);
+  var ref=h('textarea',{class:'write','aria-label':'My plan',placeholder:'Write one sentence: The next time a conflict starts at work, I will ...'});
+  ref.style.minHeight='90px';
+  sec.appendChild(h('div',{class:'task'},h('div',{class:'thead'},h('h3',null,'My plan')),h('p',{class:'intro'},'Optional. Write one sentence about what you will do next time.'),ref));
+  var sum=h('textarea',{class:'sum',readonly:true,'aria-label':'Result text for your teacher'});
+  function build(){
+    var lines=['Kitchen Conflicts, result'+(STATE.name?' for '+STATE.name:''),'Total: '+sc.got+' / '+sc.max+' ('+pct+' percent), '+rank];
+    stations.forEach(function(s,i){var p=sc.per[i];if(p.max)lines.push(s.name+': '+p.got+' / '+p.max);});
+    if(ref.value.trim())lines.push('My plan: '+ref.value.trim());
+    if(STATE.writing.trim())lines.push('My message to Pia: '+STATE.writing.trim());
+    sum.value=lines.join('\n');
+  }
+  ref.addEventListener('input',build);build();
+  var status=h('p',{class:'count',role:'status'});
+  var again=h('div',{class:'again'},
+    btn('Copy my result',function(){
+      build();
+      var ok=false;
+      try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(sum.value).then(function(){status.textContent='Copied.';},function(){status.textContent='Could not copy. Select the text and copy it yourself.';});return;}}catch(e){}
+      try{sum.select();ok=document.execCommand('copy');}catch(e){}
+      status.textContent=ok?'Copied.':'Could not copy. Select the text and copy it yourself.';
+    },'primary'),
+    btn('Print or save as PDF',function(){try{window.print();}catch(e){}}),
+    btn('Start again',function(){location.reload();}));
+  sec.appendChild(h('div',{class:'task'},h('div',{class:'thead'},h('h3',null,'Send your result to your teacher')),
+    h('p',{class:'intro'},'Copy the text below and paste it where your teacher asks, or save the page as a PDF.'),sum,again,status));
+  sec.appendChild(h('div',{class:'nav'},btn('Back',function(){show(stations.length-2);}),h('span')));
+}
+
+/* ---------- build + navigation ---------- */
+var rail=document.getElementById('rail'),main=document.getElementById('main');
+stations.forEach(function(s,i){
+  var tk=h('button',{type:'button',class:'ticket'},
+    h('span',{class:'tn'},String(i+1)),h('span',{class:'tt'},s.name),h('span',{class:'tm'},'about '+s.min+' min'),h('span',{class:'td'},'Done'));
+  tk.onclick=function(){show(i);};
+  rail.appendChild(tk);tickets.push(tk);
+});
+stations.forEach(function(s,i){
+  curSt=i;
+  var sec=h('section',{class:'sheet',hidden:true,'aria-labelledby':'h'+i});
+  if(i>0&&i<stations.length-1){
+    sec.appendChild(h('div',{class:'shead'},h('h2',{id:'h'+i,tabindex:'-1'},s.name),h('p',{class:'meta'},'Station '+i+' of '+(stations.length-2)+', about '+s.min+' minutes')));
+  }
+  s.fn(sec);
+  if(i>0&&i<stations.length-1){
+    var lf=h('p',{class:'left'});leftEls[i]=lf;sec.appendChild(lf);
+    sec.appendChild(h('div',{class:'nav'},
+      btn('Back',function(){show(i-1);}),
+      btn(i===stations.length-2?'See my result':'Next station',function(){show(i+1);},'primary')));
+  }
+  if(i===0){var ul=sec._plan;stations.forEach(function(x,j){if(j===0||j===stations.length-1)return;ul.appendChild(h('li',null,h('span',null,h('b',null,String(j)),x.name),h('span',null,x.min+' min')));});
+    var tot=0;stations.forEach(function(x){tot+=x.min;});ul.appendChild(h('li',null,h('span',null,'All stations and your result'),h('span',null,'about '+tot+' min')));}
+  sections.push(sec);main.appendChild(sec);
+});
+function show(i){
+  stopSpeech();hideHelp();
+  curSt=i;
+  sections.forEach(function(s,j){s.hidden=j!==i;});
+  tickets.forEach(function(t,j){if(j===i)t.setAttribute('aria-current','step');else t.removeAttribute('aria-current');});
+  if(i===stations.length-1)renderResult(sections[i]);
+  try{tickets[i].scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
+  window.scrollTo(0,0);
+  var hd=document.getElementById('h'+i);if(hd){try{hd.focus({preventScroll:true});}catch(e){}}
+}
+/* word help */
+var help=document.getElementById('help');
+function hideHelp(){help.hidden=true;}
+document.getElementById('hx').onclick=hideHelp;
+document.addEventListener('click',function(e){
+  var t=e.target;
+  if(t&&t.classList&&t.classList.contains('gl')){
+    var g=GL[t.getAttribute('data-k')];if(!g)return;
+    document.getElementById('hw').textContent=t.getAttribute('data-k');
+    document.getElementById('hd').textContent=g[0];
+    document.getElementById('hn').textContent='Norsk: '+g[1];
+    help.hidden=false;
+  }
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')hideHelp();});
+window.addEventListener('pagehide',function(){stopSpeech();});
+updateScore();
+show(0);
+})();
+</script>
+</body>
+</html>
